@@ -1,7 +1,7 @@
 import numpy as np
 import colorsys
 
-from bokeh import io
+import bokeh.io
 from bokeh import plotting as bkp
 from bokeh.core.properties import value
 from bokeh.models import FixedTicker
@@ -25,11 +25,11 @@ display(Javascript(disable_js))
 
     ## Larger labels
 
-from IPython.display import HTML
-
-display(HTML('''<style>
-    .widget-label { min-width: 20ex !important; }
-</style>'''))
+# from IPython.display import HTML
+#
+# display(HTML('''<style>
+#     .widget-label { min-width: 20ex !important; }
+# </style>'''))
 
 
     ## Load bokeh for jupyter
@@ -78,17 +78,43 @@ def interact(*args, **kwargs):
 def select(name, options):
     return SelectionSlider(description=name,  options=list(options))
 
+def floatslider(*args, **kwargs):
+    s = FloatSlider(*args, readout_format='.3f', **kwargs)
+    s.layout.width = '70%'
+    return s
+
+
     ## Graphs
 
-def unit_activity(data):
+def _unit_activity_aux(data):
     """Display graph of best choice"""
 
     fig = figure(x_range=[0, 200], y_range=[-0.5, 1.0],
                  plot_width=400, plot_height=400, tools="")
     fig.title.text = "Unit activity"
 
+    lines = []
     for name, color in [('net', 'red'), ('v_m', 'yellow'),
                         ('I_net', 'orange'), ('act', 'green')]:
-        fig.line(range(201), data[name], color=color, legend=name, line_width=2)
+        line = fig.line(range(201), data[name], color=color, legend=name, line_width=2)
+        lines.append(line.data_source.data)
 
+    return fig, lines
+
+def unit_activity(data):
+    """Display graph of best choice"""
+    fig, lines = _unit_activity_aux(data)
     bkp.show(fig)
+
+
+def unit_activity_interactive(data, figdata=None):
+    if figdata is None:
+        fig, lines = _unit_activity_aux(data)
+        bkp.show(fig)
+        return fig, lines
+    else:
+        fig, lines = figdata
+        names = ['net', 'v_m', 'I_net', 'act']
+        for name, line in zip(names, lines):
+            line['y'] = data[name]
+        bokeh.io.push_notebook()
