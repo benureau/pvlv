@@ -4,7 +4,7 @@ import colorsys
 import bokeh.io
 from bokeh import plotting as bkp
 from bokeh.core.properties import value
-from bokeh.models import FixedTicker
+from bokeh.models import FixedTicker, Legend
 from bokeh.models.mappers import LinearColorMapper
 
 import ipywidgets.widgets
@@ -93,13 +93,20 @@ def _unit_activity_aux(data):
                  plot_width=400, plot_height=400, tools="")
     fig.title.text = "Unit activity"
 
-    lines = []
-    for name, color in [('net', 'red'), ('v_m', 'yellow'),
-                        ('I_net', 'orange'), ('act', 'green')]:
-        line = fig.line(range(201), data[name], color=color, legend=name, line_width=2)
-        lines.append(line.data_source.data)
+    names = ('net', 'v_m', 'I_net', 'act')
+    colors = ('red', 'yellow', 'orange', 'green')
 
-    return fig, lines
+    lines = []
+    for name, color in zip(names, colors):
+        line = fig.line(range(201), data[name], color=color, line_width=2)
+        lines.append(line)
+
+    legend = Legend(legends=[(name, [line]) for name, line in zip(names, lines)],
+                    location=(10, -40))
+
+    fig.add_layout(legend, 'right')
+
+    return fig, [line.data_source.data for line in lines]
 
 def unit_activity(data):
     """Display graph of best choice"""

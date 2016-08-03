@@ -32,6 +32,8 @@ class UnitConstants:
         self.act_thr  = 0.25 # threshold
         self.act_gain = 600  # gain
 
+        self.bias     = 0.0
+
 
 
 class Unit:
@@ -46,6 +48,12 @@ class Unit:
         self.act   = 0
 
         self.logs  = {'net': [], 'act': [], 'I_net': [], 'v_m': []}
+
+
+    @property
+    def net(self):
+        """Excitatory conductance."""
+        return self.cst.g_bar_e * self.g_e
 
 
     def cycle(self, net_raw, g_i=0.0, dt_integ=1):
@@ -72,7 +80,7 @@ class Unit:
         self.act = X / (X + 1) # eq 2.19
 
         self.update_logs()
-        
+
 
     def update_logs(self):
         """Record current state. Called after each cycle."""
@@ -80,12 +88,6 @@ class Unit:
         self.logs['I_net'].append(self.I_net)
         self.logs['v_m'].append(self.v_m)
         self.logs['act'].append(self.act)
-
-
-    @property
-    def net(self):
-        """Excitatory conductance."""
-        return self.cst.g_bar_e * self.g_e
 
 
     def show_config(self):
