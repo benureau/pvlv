@@ -18,12 +18,13 @@ framework significantly evolved in since the publication of the PVLV article in 
 
 - [x] Unit class
 - [x] Unit example
-- [ ] Layer class
+- [x] Layer class
+- [x] Layer example
 - [ ] Network class
 - [ ] Network/Layer example
 - [ ] PVLV algorithm
-- [ ] PVLV visualization
 - [ ] PVLV example
+- [ ] PVLV visualization
 - [ ] Results reproduced
 
 

@@ -41,28 +41,27 @@ class Layer(object):
         return np.array([[self.units[i][j].act for j in range(self.shape[1])]
                                                for i in range(self.shape[0]) ])
 
-
     def set_activities(self, inputs):
         """Set the units's activities equal to the inputs"""
         for (i, j), inp in np.ndenumerate(inputs):
             self.units[i][j].set_activity(inp)
 
-    def active_threshold(self, u):
+    def _active_threshold(self, u):
         """Threshold of kWTA inhibition. See eq. A7."""
         g_e_star = u.g_e - u.cst.bias/self.N
         return (  u.cst.g_bar_e * g_e_star  * (u.cst.e_rev_e - u.cst.act_thr)  # eq. A7
                 + u.cst.g_bar_l * u.cst.g_l * (u.cst.e_rev_l - u.cst.act_thr)
                 )/ (u.cst.act_thr - u.cst.e_rev_i)
 
-    def inhibition(self):
+    def _inhibition(self):
         """Compute inhibition"""
-        g_thrs = [self.active_threshold(u) for _, u in np.ndenumerate(self.units)]
+        g_thrs = [self._active_threshold(u) for _, u in np.ndenumerate(self.units)]
         g_thrs.sort()
         return g_thrs[self.k] + self.cst.q * (g_thrs[self.k] - g_thrs[self.k-1])
 
     def cycle(self, inputs):
         """Update the state of the layer"""
-        self.g_i = self.inhibition()
+        self.g_i = self._inhibition()
         inputs = np.array(inputs)
         assert inputs.shape == self.shape
         for (i, j), net_raw in np.ndenumerate(inputs):
