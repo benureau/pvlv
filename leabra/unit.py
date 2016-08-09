@@ -6,6 +6,9 @@ We implement only the rate-coded version. The code is intended to be
 as simple as possible to understand. It is not in any way optimized
 for performance.
 """
+import numpy as np
+import scipy.interpolate
+
 
 
 class UnitConstants:
@@ -17,23 +20,25 @@ class UnitConstants:
 
     def __init__(self):
         # time step constants
-        self.dt_net   = 0.7  # to update net (net = g_e * g_bar_e) (eq. 2.8)
-        self.dt_vm    = 0.1  # to update vm (eq. 2.16)
+        self.dt_net    = 0.7   # for net update (net = g_e * g_bar_e) (eq. 2.8)
+        self.dt_vm     = 0.1   # for vm update (eq. 2.16)
         # input channels parameters (eq. 2.8)
-        self.g_l      = 1.0  # leak current (constant)
-        self.g_bar_e  = 0.4  # excitatory maximum conductance
-        self.g_bar_i  = 1.0  # inhibitatory maximum conductance
-        self.g_bar_l  = 2.8  # leak maximum conductance
+        self.g_l       = 1.0   # leak current (constant)
+        self.g_bar_e   = 0.4   # excitatory maximum conductance
+        self.g_bar_i   = 1.0   # inhibitatory maximum conductance
+        self.g_bar_l   = 2.8   # leak maximum conductance
         # reversal potential (eq. 2.8)
-        self.e_rev_e  = 1.0  # excitatory
-        self.e_rev_i  = 0.15 # inhibitatory
-        self.e_rev_l  = 0.15 # leak
+        self.e_rev_e   = 1.0   # excitatory
+        self.e_rev_i   = 0.15  # inhibitatory
+        self.e_rev_l   = 0.15  # leak
         # activation function parameters (eq. 2.19)
-        self.act_thr  = 0.25 # threshold
-        self.act_gain = 600  # gain
+        self.act_thr   = 0.25  # threshold
+        self.act_gain  = 600   # gain
 
-        self.bias     = 0.0
+        self.bias      = 0.0
 
+        self.noisy_act = False # If True, uses the noisy activation function (eq A5)
+        self.act_sd    = 0.005 # standard deviation of the noisy gaussian (eq A5)
 
 
 class Unit:
@@ -46,6 +51,8 @@ class Unit:
         self.I_net = 0
         self.v_m   = 0.15
         self.act   = 0
+
+        self._nxx1_conv = None # precomputed convolution for the noisy xx1 function
 
         self.logs  = {'net': [], 'act': [], 'I_net': [], 'v_m': []}
 
@@ -76,10 +83,40 @@ class Unit:
         self.v_m += dt_integ * self.cst.dt_vm * self.I_net  # eq 2.8
 
         # updating activity
-        X = self.cst.act_gain * max((self.v_m - self.cst.act_thr), 0.0)
-        self.act = X / (X + 1) # eq 2.19
+        if self.cst.noisy_act:
+            self.act = self.noisy_xx1(self.v_m)
+        else:
+            self.act = self.xx1(self.v_m)
 
         self.update_logs()
+
+    def xx1(self, v_m):
+        X = self.cst.act_gain * max((v_m - self.cst.act_thr), 0.0)
+        return X / (X + 1) # eq 2.19
+
+    def noisy_xx1(self, v_m):
+        """Compute the noisy x/(x+1) function.
+
+        The noisy x/(x+1) function is the convolution of the x/(x+1) function
+        with a Gaussian with a `self.cst.act_sd` standard deviation. Here, we
+        precompute the convolution as a look-up table, and interpolate it with
+        the desired point every time the function is called.
+        """
+        if self._nxx1_conv is None: # we precompute the convolution.
+            xs = np.linspace(-2.0, 2.0, 2000) # x represents (self.v_m - self.cst.act_thr)
+            X  = self.cst.act_gain * np.maximum(xs, 0)
+            xx1 = X / (X + 1) # regular x/(x+1) function over xs
+
+            gaussian = (np.exp(-xs**2 / (2 * self.cst.act_sd**2)) /
+                        (self.cst.act_sd * np.sqrt(2 * np.pi)))
+
+            conv = np.convolve(xx1, gaussian, mode='same')/np.sum(gaussian)
+            self._nxx1_conv = xs, conv
+
+        x = v_m - self.cst.act_thr
+        xs, conv = self._nxx1_conv
+        return float(scipy.interpolate.interp1d(xs, conv, kind='linear',
+                                                fill_value='extrapolate')(x))
 
 
     def update_logs(self):

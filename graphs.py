@@ -86,6 +86,24 @@ def floatslider(*args, **kwargs):
 
     ## Graphs
 
+def line(xs, ys, title='', width=400, height=400):
+    fig = figure(plot_width=width, plot_height=height, tools="")
+    fig.title.text = title
+    fig.line(xs, ys)
+    bkp.show(fig)
+
+def xx1(xs, y_xx1, y_noisy_xx1, title='', width=400, height=400):
+    fig = figure(plot_width=width, plot_height=height, tools="")
+    fig.title.text = title
+    fig.line(xs, y_xx1, legend='XX1',
+                          line_alpha=0.5, line_width=2)
+    fig.line(xs, y_noisy_xx1, legend='Noisy XX1',
+             color='red', line_alpha=0.5, line_width=2)
+    fig.legend.location = 'right_center'
+    bkp.show(fig)
+
+
+
 def _unit_activity_aux(data):
     """Display graph of best choice"""
 
