@@ -22,7 +22,7 @@ class Layer:
         """
         self.spec = spec
         if self.spec is None:
-            self.spec = LayerConstants()
+            self.spec = LayerSpec()
 
         self.size = size
         self.units = [Unit(spec=unit_spec) for _ in range(self.size)]
@@ -43,7 +43,7 @@ class Layer:
         """Set the units's activities equal to the inputs"""
         assert len(inputs) == self.size
         for u, inp in zip(self.units, inputs):
-            u.set_activity(inp)
+            u.act = inp
 
     def _active_threshold(self, u):
         """Threshold of kWTA inhibition. See eq. A7."""
