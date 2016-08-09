@@ -11,11 +11,18 @@ import scipy.interpolate
 
 
 
-class UnitConstants:
-    """Units constants.
+class UnitSpec:
+    """Units parameters.
 
-    Each unit can have different constants values. They don't change during
-    cycles.
+    Each unit can have different parameters values. They don't change during
+    cycles, and unless you know what you're doing, you should not change them
+    after the Unit creation. The best way to proceed is to create the UnitSpec,
+    modify it, and pass it to the Unit.__init__ method:
+
+    >>> spec = UnitSpec()
+    >>> spec.bias = 0.5
+    >>> u = Unit(spec)
+
     """
 
     def __init__(self):
@@ -44,8 +51,14 @@ class UnitConstants:
 class Unit:
     """Leabra Unit (as implemented in emergent 5.0)"""
 
-    def __init__(self):
-        self.cst = UnitConstants()
+    def __init__(self, spec=None):
+        """
+        spec:  UnitSpec instance with custom values for the unit parameters.
+               If None, default values will be used.
+        """
+        self.spec = spec
+        if self.spec is None:
+            self.spec = UnitSpec()
 
         self.g_e   = 0
         self.I_net = 0
@@ -60,7 +73,7 @@ class Unit:
     @property
     def net(self):
         """Excitatory conductance."""
-        return self.cst.g_bar_e * self.g_e
+        return self.spec.g_bar_e * self.g_e
 
 
     def cycle(self, net_raw, g_i=0.0, dt_integ=1):
@@ -69,21 +82,21 @@ class Unit:
         dt_integ: integration time step, in ms.
         """
         # updating net
-        self.g_e += dt_integ * self.cst.dt_net * (net_raw - self.g_e)  # eq 2.16
+        self.g_e += dt_integ * self.spec.dt_net * (net_raw - self.g_e)  # eq 2.16
 
         # computing I_net
-        gc_e = self.cst.g_bar_e * self.g_e
-        gc_i = self.cst.g_bar_i * g_i
-        gc_l = self.cst.g_bar_l * self.cst.g_l
-        self.I_net = (  gc_e * (self.cst.e_rev_e - self.v_m)  # eq 2.8
-                      + gc_i * (self.cst.e_rev_i - self.v_m)
-                      + gc_l * (self.cst.e_rev_l - self.v_m))
+        gc_e = self.spec.g_bar_e * self.g_e
+        gc_i = self.spec.g_bar_i * g_i
+        gc_l = self.spec.g_bar_l * self.spec.g_l
+        self.I_net = (  gc_e * (self.spec.e_rev_e - self.v_m)  # eq 2.8
+                      + gc_i * (self.spec.e_rev_i - self.v_m)
+                      + gc_l * (self.spec.e_rev_l - self.v_m))
 
         # updating v_m
-        self.v_m += dt_integ * self.cst.dt_vm * self.I_net  # eq 2.8
+        self.v_m += dt_integ * self.spec.dt_vm * self.I_net  # eq 2.8
 
         # updating activity
-        if self.cst.noisy_act:
+        if self.spec.noisy_act:
             self.act = self.noisy_xx1(self.v_m)
         else:
             self.act = self.xx1(self.v_m)
@@ -91,29 +104,29 @@ class Unit:
         self.update_logs()
 
     def xx1(self, v_m):
-        X = self.cst.act_gain * max((v_m - self.cst.act_thr), 0.0)
+        X = self.spec.act_gain * max((v_m - self.spec.act_thr), 0.0)
         return X / (X + 1) # eq 2.19
 
     def noisy_xx1(self, v_m):
         """Compute the noisy x/(x+1) function.
 
         The noisy x/(x+1) function is the convolution of the x/(x+1) function
-        with a Gaussian with a `self.cst.act_sd` standard deviation. Here, we
+        with a Gaussian with a `self.spec.act_sd` standard deviation. Here, we
         precompute the convolution as a look-up table, and interpolate it with
         the desired point every time the function is called.
         """
         if self._nxx1_conv is None: # we precompute the convolution.
-            xs = np.linspace(-2.0, 2.0, 2000) # x represents (self.v_m - self.cst.act_thr)
-            X  = self.cst.act_gain * np.maximum(xs, 0)
+            xs = np.linspace(-2.0, 2.0, 2000) # x represents (self.v_m - self.spec.act_thr)
+            X  = self.spec.act_gain * np.maximum(xs, 0)
             xx1 = X / (X + 1) # regular x/(x+1) function over xs
 
-            gaussian = (np.exp(-xs**2 / (2 * self.cst.act_sd**2)) /
-                        (self.cst.act_sd * np.sqrt(2 * np.pi)))
+            gaussian = (np.exp(-xs**2 / (2 * self.spec.act_sd**2)) /
+                        (self.spec.act_sd * np.sqrt(2 * np.pi)))
 
             conv = np.convolve(xx1, gaussian, mode='same')/np.sum(gaussian)
             self._nxx1_conv = xs, conv
 
-        x = v_m - self.cst.act_thr
+        x = v_m - self.spec.act_thr
         xs, conv = self._nxx1_conv
         return float(scipy.interpolate.interp1d(xs, conv, kind='linear',
                                                 fill_value='extrapolate')(x))
@@ -132,7 +145,7 @@ class Unit:
         print('Constants:')
         for name in ['dt_vm', 'dt_net', 'g_l', 'g_bar_e', 'g_bar_l', 'g_bar_i',
                      'e_rev_e', 'e_rev_l', 'e_rev_i', 'act_thr', 'act_gain']:
-            print('   {}: {:.2f}'.format(name, getattr(self.cst, name)))
+            print('   {}: {:.2f}'.format(name, getattr(self.spec, name)))
         print('State:')
         for name in ['g_e', 'I_net', 'v_m', 'act']:
             print('   {}: {:.2f}'.format(name, getattr(self, name)))

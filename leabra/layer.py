@@ -1,34 +1,38 @@
 from .unit import Unit
 
 
-class LayerConstants(object):
-    """Layer constants."""
+class LayerSpec:
+    """Layer parameters"""
 
     def __init__(self):
         self.kwta_pct = 0.25 # proportion of active units
         self.q = 0.25  # see eq. A6
 
 
-class Layer(object):
+class Layer:
     """Leabra Layer class"""
 
-    def __init__(self, size, params=None):
+    def __init__(self, size, spec=None, unit_spec=None):
         """
-        size:  number of units in the layer
+        size     :  Number of units in the layer.
+        spec     :  LayerSpec instance with custom values for the parameter of
+                    the layer. If None, default values will be used.
+        unit_spec:  UnitSpec instance with custom values for the parameters of
+                    the units of the layer. If None, default values will be used.
         """
-        self.cst = params
-        if self.cst is None:
-            self.cst = LayerConstants()
+        self.spec = spec
+        if self.spec is None:
+            self.spec = LayerConstants()
 
         self.size = size
-        self.units = [Unit() for _ in range(self.size)]
+        self.units = [Unit(spec=unit_spec) for _ in range(self.size)]
 
         self.g_i = 0.0
 
     @property
     def k(self):
         """Derived from cst.kwta_pct, the number of inhibited units"""
-        return int((1 - self.cst.kwta_pct) * self.size)
+        return int((1 - self.spec.kwta_pct) * self.size)
 
     @property
     def activities(self):
@@ -43,16 +47,16 @@ class Layer(object):
 
     def _active_threshold(self, u):
         """Threshold of kWTA inhibition. See eq. A7."""
-        g_e_star = u.g_e - u.cst.bias/self.size
-        return (  u.cst.g_bar_e * g_e_star  * (u.cst.e_rev_e - u.cst.act_thr)  # eq. A7
-                + u.cst.g_bar_l * u.cst.g_l * (u.cst.e_rev_l - u.cst.act_thr)
-                )/ (u.cst.act_thr - u.cst.e_rev_i)
+        g_e_star = u.g_e - u.spec.bias/self.size
+        return (  u.spec.g_bar_e * g_e_star   * (u.spec.e_rev_e - u.spec.act_thr)  # eq. A7
+                + u.spec.g_bar_l * u.spec.g_l * (u.spec.e_rev_l - u.spec.act_thr)
+               ) / (u.spec.act_thr - u.spec.e_rev_i)
 
     def _inhibition(self):
         """Compute inhibition"""
         g_thrs = [self._active_threshold(u) for u in self.units]
         g_thrs.sort()
-        return g_thrs[self.k] + self.cst.q * (g_thrs[self.k] - g_thrs[self.k-1])
+        return g_thrs[self.k] + self.spec.q * (g_thrs[self.k] - g_thrs[self.k-1])
 
     def cycle(self, inputs):
         """Update the state of the layer"""

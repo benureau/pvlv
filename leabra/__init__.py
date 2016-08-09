@@ -1,2 +1,2 @@
-from .unit import Unit, UnitConstants
-from .layer import Layer, LayerConstants
+from .unit  import Unit, UnitSpec
+from .layer import Layer, LayerSpec
