@@ -1,5 +1,7 @@
 # Primary Value and Learned Value Learning Algorithm
 
+[![Binder](http://mybinder.org/badge.svg)](http://mybinder.org:/repo/humm/pvlv)
+
 This repository holds a Python implementation of the Primary Value and Learned
 Value Learning Algorithm (PVLV), as described in the [eponymous article](http://ski.clps.brown.edu/papers/OReillyFrankHazyEtAl07.pdf) by
 Randall C. O'Reilly, Michael J. Frank, Thomas E. Hazy and Brandon Watz.
@@ -12,6 +14,10 @@ modify, forgoing any optimization ambitions.
 
 This repository includes an implementation of the underlying [Leabra framework](https://grey.colorado.edu/emergent/index.php/Leabra). The Leabra
 framework significantly evolved in since the publication of the PVLV article in 2007. Here we reimplement the Leabra framework corresponding to emergent 5.0.
+
+## Online Notebooks
+
+[Notebooks can be run online](http://mybinder.org:/repo/humm/pvlv) through the [mybinder](http://mybinder.org) service.
 
 
 ## Status & Roadmap
