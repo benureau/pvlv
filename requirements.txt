@@ -2,3 +2,4 @@ numpy
 scipy
 bokeh
 ipywidgets>=5.0
+jupyter
