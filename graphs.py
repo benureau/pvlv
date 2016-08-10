@@ -8,7 +8,8 @@ from bokeh.models import FixedTicker, Legend
 from bokeh.models.mappers import LinearColorMapper
 
 import ipywidgets.widgets
-from ipywidgets.widgets import fixed, IntSlider, FloatSlider, SelectionSlider
+from ipywidgets.widgets import fixed, IntSlider, FloatSlider
+# from ipywidgets.widgets import SelectionSlider # for ipywidgets 5.x
 
 
     ## Disable autoscrolling
@@ -75,8 +76,8 @@ def show(*args, **kwargs):
 def interact(*args, **kwargs):
     ipywidgets.widgets.interact(*args, **kwargs)
 
-def select(name, options):
-    return SelectionSlider(description=name,  options=list(options))
+# def select(name, options):
+#     return SelectionSlider(description=name,  options=list(options))
 
 def floatslider(*args, **kwargs):
     s = FloatSlider(*args, readout_format='.3f', **kwargs)
