@@ -58,9 +58,13 @@ class Layer:
         g_thrs.sort()
         return g_thrs[self.k] + self.spec.q * (g_thrs[self.k] - g_thrs[self.k-1])
 
-    def cycle(self, inputs):
-        """Update the state of the layer"""
+    def add_excitatory(self, inputs, forced_act=False):
         assert len(inputs) == self.size
-        self.g_i = self._inhibition()
         for u, net_raw in zip(self.units, inputs):
-            u.cycle(net_raw, g_i=self.g_i)
+            u.add_excitatory(net_raw, forced_act=forced_act)
+
+    def cycle(self):
+        """Update the state of the layer"""
+        self.g_i = self._inhibition()
+        for u in self.units:
+            u.cycle(g_i=self.g_i)
