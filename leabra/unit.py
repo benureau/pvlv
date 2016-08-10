@@ -100,10 +100,11 @@ class Unit:
         """
         # computing net_raw, the total, instantaneous, excitatory input for the neuron
         net_raw = sum(self.ex_inputs)
-        self.ex_inputs, self.forced_act = [], False
+        self.ex_inputs = []
 
         if self.forced_act:
             self.act = net_raw
+            self.forced_act = False
             return # done!
 
         # updating net

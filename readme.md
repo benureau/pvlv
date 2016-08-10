@@ -26,7 +26,7 @@ framework significantly evolved in since the publication of the PVLV article in 
 - [x] Unit example
 - [x] Layer class
 - [x] Layer example
-- [ ] Network class
+- [x] Network class
 - [ ] Network/Layer example
 - [ ] PVLV algorithm
 - [ ] PVLV example
