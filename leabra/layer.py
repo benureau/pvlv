@@ -4,9 +4,12 @@ from .unit import Unit
 class LayerSpec:
     """Layer parameters"""
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         self.kwta_pct = 0.25 # proportion of active units
         self.q = 0.25  # see eq. A6
+
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
 
 class Layer:

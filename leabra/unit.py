@@ -19,13 +19,13 @@ class UnitSpec:
     after the Unit creation. The best way to proceed is to create the UnitSpec,
     modify it, and pass it to the Unit.__init__ method:
 
-    >>> spec = UnitSpec()
-    >>> spec.bias = 0.5
+    >>> spec = UnitSpec(act_thr=0.35) # specifying parameters at instanciation
+    >>> spec.bias = 0.5               # you can also do it like that
     >>> u = Unit(spec)
 
     """
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         # time step constants
         self.dt_net    = 0.7   # for net update (net = g_e * g_bar_e) (eq. 2.8)
         self.dt_vm     = 0.1   # for vm update (eq. 2.16)
@@ -46,6 +46,9 @@ class UnitSpec:
 
         self.noisy_act = False # If True, uses the noisy activation function (eq A5)
         self.act_sd    = 0.005 # standard deviation of the noisy gaussian (eq A5)
+
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
 
 class Unit:
