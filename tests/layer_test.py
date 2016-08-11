@@ -7,8 +7,8 @@ from leabra import Layer, LayerSpec
 
 
 
-class UnitTests(unittest.TestCase):
-    """Diverse checks on Unit behavior."""
+class LayerTests(unittest.TestCase):
+    """Diverse checks on Layer behavior."""
 
     def test_set_activities(self):
         layer = Layer(4)
