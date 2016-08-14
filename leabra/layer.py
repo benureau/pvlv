@@ -57,6 +57,8 @@ class Layer:
 
     def _inhibition(self):
         """Compute inhibition"""
+        if self.k == 0:
+            return 0.0
         g_thrs = [self._active_threshold(u) for u in self.units]
         g_thrs.sort()
         return g_thrs[self.k] + self.spec.q * (g_thrs[self.k] - g_thrs[self.k-1])

@@ -1,3 +1,5 @@
+import numpy as np
+
 
 class Link:
     """A link between two units. Simple, non active class."""
@@ -24,7 +26,7 @@ class ConnectionSpec:
                              # the layers must have the same size.
         self.lrule = None    # the learning rule to use. Possible values are
                              # 'delta', 'xcal' and None.
-        self.lrate = 0.01    # learning rate (#FIXME not implemented yet)
+        self.lrate = 0.01    # learning rate
 
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -58,21 +60,48 @@ class Connection:
                 for post_u in self.post.units:
                     self.links.append(Link(pre_u, post_u, self.spec.w0))
 
+
+    @property
+    def weights(self):
+        """Return a matrix of the links weights"""
+        if self.spec.proj == 'OneToOne':
+            return np.array([[link.w for link in self.links]])
+        else:
+            W = np.zeros((len(self.pre.units), len(self.post.units)))  # weight matrix
+            link_it = iter(self.links)  # link iterator
+            for i, pre_u in enumerate(self.pre.units):
+                for j, post_u in enumerate(self.post.units):
+                    W[i, j] = next(link_it).wt
+            return W
+
+
     def cycle(self):
-        """Transmit activity, compute weight changes."""
-        # transmit activity
+        """Transmit activity."""
         for link in self.links:
             scaled_act = self.spec.st * link.wt * link.pre.act
             link.post.add_excitatory(scaled_act, forced_act=self.spec.force)
 
-        #TODO learning/weight changes
+
+    def learn(self):
         if self.spec.lrule is not None:
-            getattr(self, self.spec.lrule + '_rule')()
+            getattr(self, self.spec.lrule + '_lrule')()
+        for link in self.links:
+            link.wt = max(0.0, min(1.0, link.wt)) # clipping weights after change
 
-    def delta_rule(self):
-        """Delta learning rule"""
-        raise NotImplementedError
 
-    def xcal_rule(self):
+    def delta_lrule(self):
+        """Delta learning rule.
+
+        Presumably at the end of the plus phase, compares difference between the
+        current activity of the post-unit (allegedly representing the target
+        activity) with its activity at the end of the minus phase (stored in
+        `act_m`). The weights are then modified in proportion to this difference,
+        the current pre-unit activity and the learning rate.
+        """
+        for link in self.links:
+            dwt = self.spec.lrate * (link.post.act - link.post.act_m) * link.pre.act  # eq. A8
+            link.wt += dwt
+
+    def xcal_lrule(self):
         """XCAL learning rule"""
         raise NotImplementedError

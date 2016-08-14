@@ -69,7 +69,8 @@ class Unit:
         self.g_e   = 0
         self.I_net = 0
         self.v_m   = 0.15
-        self.act   = 0
+        self.act   = 0     # current activity
+        self.act_m = 0     # activity at the end of the minus phase
 
         self._nxx1_conv = None # precomputed convolution for the noisy xx1 function
         self.logs  = {'net': [], 'act': [], 'I_net': [], 'v_m': []}
@@ -102,7 +103,7 @@ class Unit:
         dt_integ:  integration time step, in ms.
         """
         # computing net_raw, the total, instantaneous, excitatory input for the neuron
-        net_raw = sum(self.ex_inputs)
+        net_raw = sum(self.ex_inputs) # / max(1, len(self.ex_inputs))
         self.ex_inputs = []
 
         if self.forced_act:
@@ -147,15 +148,15 @@ class Unit:
         precompute the convolution as a look-up table, and interpolate it with
         the desired point every time the function is called.
         """
-        if self._nxx1_conv is None: # we precompute the convolution.
-            xs = np.linspace(-2.0, 2.0, 2000) # x represents (self.v_m - self.spec.act_thr)
+        if self._nxx1_conv is None:  # convolution not precomputed yet
+            xs = np.linspace(-2.0, 2.0, 2000)  # x represents (self.v_m - self.spec.act_thr)
             X  = self.spec.act_gain * np.maximum(xs, 0)
-            xx1 = X / (X + 1) # regular x/(x+1) function over xs
+            xx1 = X / (X + 1)  # regular x/(x+1) function over xs
 
             gaussian = (np.exp(-xs**2 / (2 * self.spec.act_sd**2)) /
                         (self.spec.act_sd * np.sqrt(2 * np.pi)))
 
-            conv = np.convolve(xx1, gaussian, mode='same')/np.sum(gaussian)
+            conv = np.convolve(xx1, gaussian, mode='same') / np.sum(gaussian)
             self._nxx1_conv = xs, conv
 
         x = v_m - self.spec.act_thr

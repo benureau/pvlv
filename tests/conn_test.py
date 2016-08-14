@@ -16,7 +16,7 @@ class ConnectionTests(unittest.TestCase):
         conn    = Connection(L1, L2, conspec)
 
         with self.assertRaises(NotImplementedError):
-            conn.cycle()
+            conn.learn()
 
 if __name__ == '__main__':
     unittest.main()
