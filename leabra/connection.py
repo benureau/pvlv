@@ -12,8 +12,8 @@ class Link:
 
 class ConnectionSpec:
 
-    legal_lrule = (None, 'delta', 'xcal') # available values for self.lrule
-    legal_proj  = ('Full', 'OneToOne')    #              ... for self.proj
+    legal_lrule = None, 'delta', 'xcal' # available values for self.lrule
+    legal_proj  = 'full', '1to1'        #              ... for self.proj
 
     def __init__(self, **kwargs):
         """Connnection parameters"""
@@ -21,8 +21,8 @@ class ConnectionSpec:
         self.force = False   # activity are set directly in the post_layer
         self.inhib = False   # if True, inhibitory connection
         self.w0    = 1.0     # intial weights
-        self.proj  = 'Full'  # connection pattern between units.
-                             # Can be 'Full' or 'OneToOne'. In the latter case,
+        self.proj  = 'full'  # connection pattern between units.
+                             # Can be 'Full' or '1to1'. In the latter case,
                              # the layers must have the same size.
         self.lrule = None    # the learning rule to use. Possible values are
                              # 'delta', 'xcal' and None.
@@ -51,7 +51,7 @@ class Connection:
         # creating unit-to-unit links
         self.links = []
         assert self.spec.proj in self.spec.legal_proj
-        if self.spec.proj == 'OneToOne':
+        if self.spec.proj == '1to1':
             assert self.pre.size == self.post.size
             for pre_u, post_u in zip(self.pre.units, self.post.units):
                 self.links.append(Link(pre_u, post_u, self.spec.w0))
@@ -64,7 +64,7 @@ class Connection:
     @property
     def weights(self):
         """Return a matrix of the links weights"""
-        if self.spec.proj == 'OneToOne':
+        if self.spec.proj == '1to1':
             return np.array([[link.w for link in self.links]])
         else:
             W = np.zeros((len(self.pre.units), len(self.post.units)))  # weight matrix

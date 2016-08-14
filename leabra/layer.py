@@ -4,9 +4,14 @@ from .unit import Unit
 class LayerSpec:
     """Layer parameters"""
 
+    legal_inhib = 'kwta', 'kwta_avg'  # available values for self.inhib
+
     def __init__(self, **kwargs):
-        self.kwta_pct = 0.25 # proportion of active units
-        self.q = 0.25  # see eq. A6
+        self.inhib    = 'kwta'   # inhibition rule: 'kwta' or 'kwta_avg'
+        self.k        = None     # number of active units.
+        self.kwta_pct = 0.25     # proportion of active units; used to compute k
+                                 # only if self.k is None.
+        self.q        = 0.25     # see eq. A6
 
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -35,7 +40,9 @@ class Layer:
     @property
     def k(self):
         """Derived from cst.kwta_pct, the number of inhibited units"""
-        return int((1 - self.spec.kwta_pct) * self.size)
+        if self.spec.k is None:
+            return int(self.spec.kwta_pct * self.size)
+        else: return self.spec.k
 
     @property
     def activities(self):
@@ -57,11 +64,19 @@ class Layer:
 
     def _inhibition(self):
         """Compute inhibition"""
-        if self.k == 0:
-            return 0.0
         g_thrs = [self._active_threshold(u) for u in self.units]
-        g_thrs.sort()
-        return g_thrs[self.k] + self.spec.q * (g_thrs[self.k] - g_thrs[self.k-1])
+        g_thrs.sort(reverse=True)
+        if self.k >= self.size:  # no inhibition
+            return g_thrs[-1] - 0.01  # HACKISH
+        if self.k == 0:          # every unit is inhibited
+            return g_thrs[0]
+
+        # non-extreme cases
+        if self.spec.inhib.lower() == 'kwta':
+            return g_thrs[self.k] + self.spec.q * (g_thrs[self.k-1] - g_thrs[self.k])  # eq. A6
+        else:  # self.spec.inhib == 'avg_kwta'
+            top_avg, bottom_avg = np.mean(g_thrs[:k]), np.mean(g_thrs[k+1:])
+            return top_avg + self.spec.q * (top_avg - bottom_avg)  # eq. 3.6 [CECN1]
 
     def add_excitatory(self, inputs, forced_act=False):
         assert len(inputs) == self.size
