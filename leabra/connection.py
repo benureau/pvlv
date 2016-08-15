@@ -96,7 +96,7 @@ class Connection:
         current activity of the post-unit (allegedly representing the target
         activity) with its activity at the end of the minus phase (stored in
         `act_m`). The weights are then modified in proportion to this difference,
-        the current pre-unit activity and the learning rate.
+        the current pre-unit activity (credit attribution) and the learning rate.
         """
         for link in self.links:
             dwt = self.spec.lrate * (link.post.act - link.post.act_m) * link.pre.act  # eq. A8
