@@ -103,8 +103,6 @@ def xx1(xs, y_xx1, y_noisy_xx1, title='', width=400, height=400):
     fig.legend.location = 'right_center'
     bkp.show(fig)
 
-
-
 def _unit_activity_aux(data):
     """Display graph of best choice"""
 
@@ -132,7 +130,6 @@ def unit_activity(data):
     fig, lines = _unit_activity_aux(data)
     bkp.show(fig)
 
-
 def unit_activity_interactive(data, figdata=None):
     if figdata is None:
         fig, lines = _unit_activity_aux(data)
@@ -144,3 +141,25 @@ def unit_activity_interactive(data, figdata=None):
         for name, line in zip(names, lines):
             line['y'] = data[name]
         bokeh.io.push_notebook()
+
+
+    # PVLV graphs
+
+def dopamine(logs, title='Dopamine', width=600, height=400):
+    fig = figure(plot_width=width, plot_height=height, tools="", y_range=(-1.1, 1.1))
+    fig.title.text = title
+
+    names  = ('DA', 'PVe', 'PVi', 'LVe', 'LVi')
+    colors = ('black', 'red', 'green', 'purple', 'blue')
+    lines  = []
+
+    for name, color in zip(names, colors):
+        line  = fig.line(range(5), logs[name], line_color=color, line_width=2, alpha=0.5)
+        lines.append(line)
+
+    legend = Legend(legends=[(name, [line]) for name, line in zip(names, lines)],
+                    location=(10, -40))
+    fig.add_layout(legend, 'right')
+
+
+    bkp.show(fig)
