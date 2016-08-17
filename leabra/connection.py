@@ -46,11 +46,12 @@ class Connection:
         self.spec = spec
         if self.spec is None:
             self.spec = ConnectionSpec()
-        assert self.spec.lrule in self.spec.legal_lrule
+        assert (self.spec.lrule is None or
+                self.spec.lrule.lower() in self.spec.legal_lrule)
 
         # creating unit-to-unit links
         self.links = []
-        assert self.spec.proj in self.spec.legal_proj
+        assert self.spec.proj.lower() in self.spec.legal_proj
         if self.spec.proj == '1to1':
             assert self.pre.size == self.post.size
             for pre_u, post_u in zip(self.pre.units, self.post.units):
@@ -64,9 +65,9 @@ class Connection:
     @property
     def weights(self):
         """Return a matrix of the links weights"""
-        if self.spec.proj == '1to1':
+        if self.spec.proj.lower() == '1to1':
             return np.array([[link.w for link in self.links]])
-        else:
+        else:  # proj == 'full'
             W = np.zeros((len(self.pre.units), len(self.post.units)))  # weight matrix
             link_it = iter(self.links)  # link iterator
             for i, pre_u in enumerate(self.pre.units):

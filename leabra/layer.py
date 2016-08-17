@@ -31,6 +31,7 @@ class Layer:
         self.spec = spec
         if self.spec is None:
             self.spec = LayerSpec()
+        assert self.spec.inhib.lower() in self.spec.legal_inhib
 
         self.size = size
         self.units = [Unit(spec=unit_spec) for _ in range(self.size)]
