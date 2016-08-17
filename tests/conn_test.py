@@ -1,8 +1,6 @@
-import os
 import unittest
-import random
 
-import dotdot
+import dotdot  # pylint: disable=unused-import
 from leabra import Connection, ConnectionSpec
 from leabra import Layer
 
@@ -17,6 +15,7 @@ class ConnectionTests(unittest.TestCase):
 
         with self.assertRaises(NotImplementedError):
             conn.learn()
+
 
 if __name__ == '__main__':
     unittest.main()

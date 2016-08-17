@@ -89,3 +89,10 @@ class Layer:
         self.g_i = self._inhibition()
         for u in self.units:
             u.cycle(g_i=self.g_i)
+
+
+# class ScalarVarLayer(Layer):
+#
+#     @property
+#     def value(self):
+#

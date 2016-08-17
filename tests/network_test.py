@@ -1,8 +1,7 @@
-import os
 import unittest
 import random
 
-import dotdot
+import dotdot  # pylint: disable=unused-import
 import leabra
 
 

@@ -1,10 +1,8 @@
-import os
 import unittest
-import random
 
 import numpy as np
 
-import dotdot
+import dotdot  # pylint: disable=unused-import
 import leabra
 
 
@@ -24,11 +22,12 @@ class LayerTests(unittest.TestCase):
         for k in range(11):
             layer_spec = leabra.LayerSpec(k=k)
             layer = leabra.Layer(10, spec=layer_spec)
-            for i in range(100):
+            for _ in range(100):
                 layer.add_excitatory(inputs)
                 layer.cycle()
 
             self.assertEqual(len(np.nonzero(layer.activities)[0]), k)
+
 
 if __name__ == '__main__':
     unittest.main()

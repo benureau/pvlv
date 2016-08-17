@@ -36,7 +36,7 @@ class Network:
 
     def settle(self):
         n = self.spec.settle - (self.cycles % self.spec.settle)
-        for i in range(n):
+        for _ in range(n):
             self.cycle()
 
     def end_minus_phase(self):
